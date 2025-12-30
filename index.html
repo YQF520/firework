@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>2026 Fireworks</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+  </style>
+</head>
+<body>
+<script>
+let rockets = [];
+let particles = [];
+
+class Rocket {
+  constructor() {
+    this.x = random(50, width-50);
+    this.y = height;
+    this.vy = random(-6, -3);
+    this.color = color(random(255), random(255), random(255));
+    this.exploded = false;
+    this.trail = [];
+  }
+
+  update() {
+    this.trail.push({x: this.x, y: this.y});
+    if (this.trail.length > 10) this.trail.shift();
+    this.y += this.vy;
+    if (this.y < random(50, height/2)) this.exploded = true;
+  }
+
+  show() {
+    noStroke();
+    // rocket trail
+    for (let i = 0; i < this.trail.length; i++) {
+      let t = this.trail[i];
+      fill(red(this.color), green(this.color), blue(this.color), i*25);
+      ellipse(t.x, t.y, 3, 8);
+    }
+    fill(this.color);
+    ellipse(this.x, this.y, 4, 12);
+  }
+}
+
+class Particle {
+  constructor(x, y, c) {
+    this.x = x;
+    this.y = y;
+    let angle = random(TWO_PI);
+    let speed = random(1, 4);
+    this.vx = cos(angle) * speed;
+    this.vy = sin(angle) * speed;
+    this.color = c;
+    this.life = 1.0;
+    this.trail = [];
+  }
+
+  update() {
+    this.trail.push({x: this.x, y: this.y, alpha: this.life});
+    if (this.trail.length > 15) this.trail.shift();
+
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.05;
+    this.life -= 0.012;
+  }
+
+  show() {
+    noStroke();
+    // trail
+    for (let t of this.trail) {
+      fill(red(this.color), green(this.color), blue(this.color), t.alpha*255);
+      ellipse(t.x, t.y, 2, 2);
+    }
+    // particle
+    fill(red(this.color), green(this.color), blue(this.color), this.life*255);
+    ellipse(this.x, this.y, 3, 3);
+  }
+
+  isDead() {
+    return this.life <= 0;
+  }
+}
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  background(0);
+}
+
+function draw() {
+  background(0, 25); // fade effect
+
+  // launch rockets
+  if (frameCount % 30 === 0) {
+    rockets.push(new Rocket());
+  }
+
+  // update rockets
+  for (let i = rockets.length-1; i >= 0; i--) {
+    let r = rockets[i];
+    r.update();
+    r.show();
+    if (r.exploded) {
+      for (let j = 0; j < 130; j++) {
+        particles.push(new Particle(r.x, r.y, r.color));
+      }
+      rockets.splice(i,1);
+    }
+  }
+
+  // update particles
+  for (let i = particles.length-1; i >=0; i--) {
+    let p = particles[i];
+    p.update();
+    p.show();
+    if (p.isDead()) particles.splice(i,1);
+  }
+
+  // draw "HAPPY NEW YEAR 2026" gradient
+  textSize(50);
+  textAlign(CENTER, CENTER);
+  strokeWeight(4);
+  for (let i=0; i<width; i+=5) {
+    let c = lerpColor(color(255,0,255), color(0,255,255), i/width);
+    stroke(c);
+    fill(c);
+    text("HAPPY NEW YEAR 2026", width/2, height-100);
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
+</body>
+</html>
