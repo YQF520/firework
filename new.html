@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Happy New Year 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .message {
+        position: absolute;
+        top: 35%;
+        width: 100%;
+        text-align: center;
+        color: white;
+    }
+
+    h1 {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 26px;
+        margin-top: 0;
+    }
+
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<div class="message">
+    <h1>Happy New Year 2026</h1>
+    <p>祝你身体健康，万事如意</p>
+</div>
+
+<script>
+const canvas = document.getElementById("fireworks");
+const ctx = canvas.getContext("2d");
+
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+
+window.addEventListener("resize", () => {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+});
+
+let fireworks = [];
+
+class Firework {
+    constructor() {
+        this.x = Math.random() * w;
+        this.y = h;
+        this.targetY = Math.random() * (h * 0.4) + 80;
+        this.speed = 4 + Math.random() * 3;
+        this.particles = [];
+        this.exploded = false;
+        this.color = `hsl(${Math.random() * 360},100%,60%)`;
+    }
+
+    update() {
+        if (!this.exploded) {
+            this.y -= this.speed;
+            if (this.y <= this.targetY) this.explode();
+        }
+
+        this.particles.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.02;
+            p.life -= 1;
+            if (p.life <= 0) this.particles.splice(i, 1);
+        });
+    }
+
+    explode() {
+        this.exploded = true;
+        for (let i = 0; i < 50; i++) {
+            this.particles.push({
+                x: this.x,
+                y: this.y,
+                vx: Math.cos(i) * (Math.random() * 3),
+                vy: Math.sin(i) * (Math.random() * 3),
+                life: 80,
+                color: this.color
+            });
+        }
+    }
+
+    draw() {
+        if (!this.exploded) {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, 3, 3);
+        }
+
+        this.particles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 2, 2);
+        });
+    }
+}
+
+function loop() {
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillRect(0, 0, w, h);
+
+    if (Math.random() < 0.05) fireworks.push(new Firework());
+
+    fireworks.forEach((f, i) => {
+        f.update();
+        f.draw();
+        if (f.exploded && f.particles.length === 0) fireworks.splice(i, 1);
+    });
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
